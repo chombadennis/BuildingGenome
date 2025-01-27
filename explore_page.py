@@ -5,6 +5,7 @@ import numpy as np
 import datetime
 import pandas as pd
 from datetime import datetime
+import os
 from visualization import visualization
 
 def load_model():
@@ -31,16 +32,22 @@ def normalize_dataframe(df):
 def show_explore_page():
     st.title("Explore Cluster Information")
 
-    # try to load previously saved data from pickle
-    # Try to load previously saved data from Pickle
+    # Check if the 'dfcluster_merged.pkl' file exists
     if "dfcluster_merged" not in st.session_state:
+        # Try loading the pickle file if it's not in the session state yet
         try:
-            with open('dfcluster_merged.pkl', 'rb') as f:
-                st.session_state.dfcluster_merged = pickle.load(f)
-                st.session_state.clustering_done = True
+            if os.path.exists('dfcluster_merged.pkl'):
+                # Load the DataFrame from the pickle file if it exists
+                with open('dfcluster_merged.pkl', 'rb') as f:
+                    st.session_state.dfcluster_merged = pickle.load(f)
+                    st.session_state.clustering_done = True
+                st.success("Clustering data has been loaded successfully.")
+            else:
+                st.error("Clustering data not found. Please run clustering first on the 'Predict' page.")
+                return  # Don't proceed if the file doesn't exist
         except FileNotFoundError:
-            st.error("Clustering data not found. Please run the clustering process first.")
-            return
+            st.error("Clustering data file not found! Please run clustering first.")
+            return  # Don't proceed if there was an error loading the file
 
     # Ensure  and proceed if clustering has been done
     if "clustering_done" in st.session_state and st.session_state.clustering_done:
@@ -118,8 +125,8 @@ def reorder_clusters(df_pivot_w_clusters):
 
         # Call the visualization function
         visualization(dfcluster_merged)
+
     else:
         st.error("The DataFrame is empty or not available.")
     
-
 

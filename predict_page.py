@@ -74,4 +74,3 @@ def show_predict_page():
             else:
                 st.error("The uploaded file must contain valid columns. Check readme file")
 
-
