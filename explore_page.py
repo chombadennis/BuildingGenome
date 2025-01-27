@@ -28,42 +28,64 @@ def normalize_dataframe(df):
     
     return df_norm
 
+import streamlit as st
+import pandas as pd
 
 def show_explore_page():
     st.title("Explore Cluster Information")
+    
+    # Allow the user to upload a CSV file
+    file_cl = st.file_uploader("Choose a CSV file", type="csv", key='low')
+        
+    if file_cl is not None:
+        try:
+            # Read the uploaded file into a DataFrame
+            dfcluster_merged = pd.read_csv(file_cl)
+            st.write("This is the uploaded file with the cluster values:")
+            
+            # Ensure the 'Date' column exists
+            if 'Date' not in dfcluster_merged.columns:
+                st.error("The uploaded file must contain a 'Date' column.")
+                return
+            
+            # Set the 'Date' column as index after dropping the first column
+            dfcluster_merged = dfcluster_merged.iloc[:, 1:]  # Drop the first column
+            dfcluster_merged['Date'] = pd.to_datetime(dfcluster_merged['Date'])  # Ensure correct datetime format
+            dfcluster_merged.set_index('Date', inplace=True)  # Set as index
+            
+            st.write(dfcluster_merged.head(50))  # Display a preview of the DataFrame
 
-    # Ensure  and proceed if clustering has been done
-    if "clustering_done" in st.session_state and st.session_state.clustering_done:
-        # Retrieve the clustered DataFrame from session state
-        dfcluster_merged = st.session_state.dfcluster_merged
-        st.write("Clustered DataFrame (with 'ClusterValue'):")
-        st.write(dfcluster_merged.head(50))
+            # User inputs: date and time
+            user_date = st.date_input("Enter a date to in 2015 to check cluster and energy load:")
+            user_time = st.time_input("Enter a time to the nearest hour (HH:MM:SS):")
 
-        # User inputs: date and time
-        user_date = st.date_input("Enter a date to check cluster and energy load:")
-        user_time = st.time_input("Enter a time (HH:MM:SS):")
+            if user_date and user_time:
+                # Convert user_time to string matching the column format
+                time_str = user_time.strftime("%H:%M:%S")
 
-        if user_date is not None and user_time is not None:
-            # Convert user_time to a `datetime.time` object
-            time_obj = user_time
+                if time_str in dfcluster_merged.columns:
+                    # Filter the DataFrame for the selected date
+                    filtered_df = dfcluster_merged.loc[dfcluster_merged.index == pd.Timestamp(user_date)]
 
-            if time_obj in dfcluster_merged.columns:
-                # Filter the DataFrame for the selected date
-                filtered_df = dfcluster_merged[dfcluster_merged["Date"] == user_date]
+                    if not filtered_df.empty:
+                        # Retrieve the cluster value and energy load
+                        cluster_value = filtered_df.get("ClusterValue", [None])[0]
+                        energy_load = filtered_df.get(time_str, [None])[0]
 
-                if not filtered_df.empty:
-                    # Retrieve the cluster value and energy load
-                    cluster_value = filtered_df.iloc[0]["ClusterValue"]
-                    energy_load = filtered_df.iloc[0][time_obj]
-
-                    st.write(f"Cluster for {user_date} at {time_obj} is **{cluster_value}**.")
-                    st.write(f"Energy load for the specified time is **{energy_load} KWh**.")
+                        if cluster_value is not None and energy_load is not None:
+                            st.write(f"Cluster for {user_date} at {time_str} is **{cluster_value}**.")
+                            st.write(f"Energy load for the specified time is **{energy_load} KWh**.")
+                        else:
+                            st.warning("Required information could not be found in the DataFrame.")
+                    else:
+                        st.warning("No data available for the specified date.")
                 else:
-                    st.warning("No data available for the specified date.")
-            else:
-                st.error(f"No energy values found for the time '{user_time}'. Please enter a valid time.")
+                    st.error(f"No energy values found for the time '{time_str}'. Please enter a valid time.")
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
     else:
-        st.error("Clustered data unavailable. Please complete clustering on the 'Predict' page first.")
+        st.error("Please upload the file from the previous page.")
+
 
 
 
@@ -95,7 +117,8 @@ def reorder_clusters(df_pivot_w_clusters):
         # left_on='ClusterNo': Specifies the column to join on from the left DataFrame (dailyclusters).
         # right_index=True: Specifies that the index of the right DataFrame (x) should be used as the join key.
         dfcluster_merged = dfcluster_merged.drop(['ClusterNo'], axis=1) # drops the 'ClusterNo' column because it is now unnecessary since we reordered the clusters to 'ClusterNo2' order
-        st.write(f"The dataframe below shows the original but pivoted dataframe conataining unnormalized energy consumption data with the reordered and reassigned cluster numbers in the last column:")
+        st.write(f"The dataframe below shows the original but pivoted dataframe containing unnormalized energy consumption data with the reordered and reassigned cluster numbers in the last column. Download it to view clusters.")
+        st.subheader(f"DataFrame with Clusters(download and head to the 'explore' page")
         st.write(dfcluster_merged)
 
         #store in session state
