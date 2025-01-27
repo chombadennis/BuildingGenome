@@ -30,28 +30,52 @@ def normalize_dataframe(df):
 import streamlit as st
 import pandas as pd
 
+import streamlit as st
+import pandas as pd
+
 def show_explore_page():
-    st.title('Explore Cluster Information')
+    st.title("Explore Cluster Information")
 
-    if 'df_pivot_w_clusters' in st.session_state:
-        df_pivot_w_clusters = st.session_state.df_pivot_w_clusters
+    # Ensure clustering has been done
+    if "clustering_done" not in st.session_state or not st.session_state.clustering_done:
+        st.error("No clustering data found. Please complete clustering on the 'Predict' page first.")
+        return
 
-        ok = st.button('Identify Specific Cluster')
-        if ok:
-            # Input fields for the user to specify the date and hour
-            user_date = st.date_input('Enter a date to check cluster:', value=None, min_value=None, max_value=None, key='date_input')
-            user_hour = st.number_input('Enter an hour to check cluster (0-23):', min_value=0, max_value=23, step=1, key='hour_input')
+    # Retrieve the clustered DataFrame from session state
+    dfcluster_merged = st.session_state.get("dfcluster_merged")
 
-            if user_date and user_hour is not None:
-                # Filter the DataFrame to get the predicted cluster number and energy values for the specified date and hour
-                filtered_df = df_pivot_w_clusters[(df_pivot_w_clusters['Date'] == user_date) & (df_pivot_w_clusters['Time'] == user_hour)]
+    if dfcluster_merged is not None:
+        st.write("Clustered DataFrame (with 'ClusterValue'):")
+        st.write(dfcluster_merged.head(50))
+
+        # User inputs: date and time
+        user_date = st.date_input("Enter a date to check cluster and energy load:")
+        user_time = st.time_input("Enter a time (HH:MM:SS):")
+
+        if user_date is not None and user_time is not None:
+            # Convert user_time to a `datetime.time` object
+            time_obj = user_time
+
+            if time_obj in dfcluster_merged.columns:
+                # Filter the DataFrame for the selected date
+                filtered_df = dfcluster_merged[dfcluster_merged["Date"] == user_date]
+
                 if not filtered_df.empty:
-                    st.write(f"Predicted cluster number for {user_date} at {user_hour}:00 is {filtered_df['ClusterNo'].values[0]}")
-                    st.write(f"Energy value used: {filtered_df['energy_values'].values[0]}")
+                    # Retrieve the cluster value and energy load
+                    cluster_value = filtered_df.iloc[0]["ClusterValue"]
+                    energy_load = filtered_df.iloc[0][time_obj]
+
+                    st.write(f"Cluster for {user_date} at {time_obj} is **{cluster_value}**.")
+                    st.write(f"Energy load for the specified time is **{energy_load} KWh**.")
                 else:
-                    st.write("No data available for the specified date and hour.")
+                    st.warning("No data available for the specified date.")
+            else:
+                st.error(f"No energy values found for the time '{user_time}'. Please enter a valid time.")
     else:
-        st.write("Please run the prediction first to generate cluster information.")
+        st.error("Clustered data unavailable. Please complete clustering on the 'Predict' page first.")
+
+
+
 
 def reorder_clusters(df_pivot_w_clusters):
     if df_pivot_w_clusters is not None:
@@ -82,6 +106,10 @@ def reorder_clusters(df_pivot_w_clusters):
         dfcluster_merged = dfcluster_merged.drop(['ClusterNo'], axis=1) # drops the 'ClusterNo' column because it is now unnecessary since we reordered the clusters to 'ClusterNo2' order
         st.write(f"The dataframe below shows the original but pivoted dataframe conataining unnormalized energy consumption data with the reordered and reassigned cluster numbers in the last column:")
         st.write(dfcluster_merged)
+
+        #store in session state
+        st.session_state.dfcluster_merged = dfcluster_merged
+        st.session_state.clustering_done = True
 
         # Call the visualization function
         visualization(dfcluster_merged)

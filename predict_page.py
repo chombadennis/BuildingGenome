@@ -25,8 +25,7 @@ def show_predict_page():
     # Allow the user to upload a CSV file
     file = st.file_uploader("Choose a CSV file", type="csv", key='100k')
 
-    ok = st.button('Show clusters')
-    if ok:
+    if st.button('Show clusters'):
         if file is not None:
             # Read the uploaded file into a DataFrame
             df = pd.read_csv(file)
@@ -73,20 +72,6 @@ def show_predict_page():
                 else:
                     st.error("The input data must have 24 hourly values to make a prediction.")
             else:
-                st.error("The uploaded file must contain 'timestamp' and 'energy_values' columns.")
+                st.error("The uploaded file must contain valid columns. Check readme file")
 
-
-
-
-
-
-
-
-
-
-
-
-
-# Call the function to display the prediction page
-show_predict_page()
 
