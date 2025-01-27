@@ -32,23 +32,6 @@ def normalize_dataframe(df):
 def show_explore_page():
     st.title("Explore Cluster Information")
 
-    # Check if the 'dfcluster_merged.pkl' file exists
-    if "dfcluster_merged" not in st.session_state:
-        # Try loading the pickle file if it's not in the session state yet
-        try:
-            if os.path.exists('dfcluster_merged.pkl'):
-                # Load the DataFrame from the pickle file if it exists
-                with open('dfcluster_merged.pkl', 'rb') as f:
-                    st.session_state.dfcluster_merged = pickle.load(f)
-                    st.session_state.clustering_done = True
-                st.success("Clustering data has been loaded successfully.")
-            else:
-                st.error("Clustering data not found. Please run clustering first on the 'Predict' page.")
-                return  # Don't proceed if the file doesn't exist
-        except FileNotFoundError:
-            st.error("Clustering data file not found! Please run clustering first.")
-            return  # Don't proceed if there was an error loading the file
-
     # Ensure  and proceed if clustering has been done
     if "clustering_done" in st.session_state and st.session_state.clustering_done:
         # Retrieve the clustered DataFrame from session state
@@ -114,10 +97,6 @@ def reorder_clusters(df_pivot_w_clusters):
         dfcluster_merged = dfcluster_merged.drop(['ClusterNo'], axis=1) # drops the 'ClusterNo' column because it is now unnecessary since we reordered the clusters to 'ClusterNo2' order
         st.write(f"The dataframe below shows the original but pivoted dataframe conataining unnormalized energy consumption data with the reordered and reassigned cluster numbers in the last column:")
         st.write(dfcluster_merged)
-
-        # Save the processed dataframe to a pickle file to persist it
-        with open('dfcluster_merged.pkl', 'wb') as f:
-            pickle.dump(dfcluster_merged, f)
 
         #store in session state
         st.session_state.dfcluster_merged = dfcluster_merged
