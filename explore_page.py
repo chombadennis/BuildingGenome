@@ -27,24 +27,25 @@ def normalize_dataframe(df):
     
     return df_norm
 
-import streamlit as st
-import pandas as pd
-
-import streamlit as st
-import pandas as pd
 
 def show_explore_page():
     st.title("Explore Cluster Information")
 
-    # Ensure clustering has been done
-    if "clustering_done" not in st.session_state or not st.session_state.clustering_done:
-        st.error("No clustering data found. Please complete clustering on the 'Predict' page first.")
-        return
+    # try to load previously saved data from pickle
+    # Try to load previously saved data from Pickle
+    if "dfcluster_merged" not in st.session_state:
+        try:
+            with open('dfcluster_merged.pkl', 'rb') as f:
+                st.session_state.dfcluster_merged = pickle.load(f)
+                st.session_state.clustering_done = True
+        except FileNotFoundError:
+            st.error("Clustering data not found. Please run the clustering process first.")
+            return
 
-    # Retrieve the clustered DataFrame from session state
-    dfcluster_merged = st.session_state.get("dfcluster_merged")
-
-    if dfcluster_merged is not None:
+    # Ensure  and proceed if clustering has been done
+    if "clustering_done" in st.session_state and st.session_state.clustering_done:
+        # Retrieve the clustered DataFrame from session state
+        dfcluster_merged = st.session_state.dfcluster_merged
         st.write("Clustered DataFrame (with 'ClusterValue'):")
         st.write(dfcluster_merged.head(50))
 
@@ -106,6 +107,10 @@ def reorder_clusters(df_pivot_w_clusters):
         dfcluster_merged = dfcluster_merged.drop(['ClusterNo'], axis=1) # drops the 'ClusterNo' column because it is now unnecessary since we reordered the clusters to 'ClusterNo2' order
         st.write(f"The dataframe below shows the original but pivoted dataframe conataining unnormalized energy consumption data with the reordered and reassigned cluster numbers in the last column:")
         st.write(dfcluster_merged)
+
+        # Save the processed dataframe to a pickle file to persist it
+        with open('dfcluster_merged.pkl', 'wb') as f:
+            pickle.dump(dfcluster_merged, f)
 
         #store in session state
         st.session_state.dfcluster_merged = dfcluster_merged
