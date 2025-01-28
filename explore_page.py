@@ -109,7 +109,7 @@ def reorder_clusters(df_pivot_w_clusters):
         x_new = x_new.set_index('ClusterNo') # Sets 'ClusterNo' as the index.
         x_new = x_new.drop([0], axis=1) # Drops the unnecessary column with sum of averages of the clusters
         st.write(f'The way cluster values are assigned is confusing right?')
-        st.write(f"Cluster values have been reassigned in the order 0,1,2,3. Such that that 0 is the clsuetr with the lowest energy load, followed by 1, 2, then 3 as the highest consuming cluster. The dataframe below shows what value the original cluster number was reassigned to:")
+        st.write(f"Below, cluster values have been reassigned in the order 0,1,2,3. Such that that 0 is the cluster with the lowest energy load, followed by 1, 2, then 3 as the highest consuming cluster. The dataframe below shows what value the original cluster number was reassigned to:")
         st.write(x_new)
         # Merge the new cluster numbers into the original DataFrame.
         dfcluster_merged = df_pivot_w_clusters.merge(x_new, how='outer', left_on='ClusterNo', right_index=True)
