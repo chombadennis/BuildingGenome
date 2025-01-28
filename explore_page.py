@@ -28,15 +28,15 @@ def normalize_dataframe(df):
     
     return df_norm
 
-import streamlit as st
-import pandas as pd
+
 
 def show_explore_page():
     st.title("Explore Cluster Information")
     
     # Allow the user to upload a CSV file
     file_cl = st.file_uploader("Choose a CSV file", type="csv", key='low')
-        
+    
+    st.subheader('Click below to get energy load and cluster value information')
     if file_cl is not None:
         try:
             # Read the uploaded file into a DataFrame
@@ -48,15 +48,15 @@ def show_explore_page():
                 st.error("The uploaded file must contain a 'Date' column.")
                 return
             
-            # Set the 'Date' column as index after dropping the first column
-            dfcluster_merged = dfcluster_merged.iloc[:, 1:]  # Drop the first column
-            dfcluster_merged['Date'] = pd.to_datetime(dfcluster_merged['Date'])  # Ensure correct datetime format
-            dfcluster_merged.set_index('Date', inplace=True)  # Set as index
-            
+            # Process the 'Date' column
+            #dfcluster_merged = dfcluster_merged.iloc[:, 1:]  # Drop the first column
+            dfcluster_merged['Date'] = pd.to_datetime(dfcluster_merged['Date']).dt.date  # Ensure date format (YYYY-MM-DD)
+            dfcluster_merged.set_index('Date', inplace=True)  # Set 'Date' as the index
+
             st.write(dfcluster_merged.head(50))  # Display a preview of the DataFrame
 
             # User inputs: date and time
-            user_date = st.date_input("Enter a date to in 2015 to check cluster and energy load:")
+            user_date = st.date_input("Enter a date in 2015 to check cluster and energy load:", min_value=pd.to_datetime('2010-01-01').date())
             user_time = st.time_input("Enter a time to the nearest hour (HH:MM:SS):")
 
             if user_date and user_time:
@@ -65,7 +65,7 @@ def show_explore_page():
 
                 if time_str in dfcluster_merged.columns:
                     # Filter the DataFrame for the selected date
-                    filtered_df = dfcluster_merged.loc[dfcluster_merged.index == pd.Timestamp(user_date)]
+                    filtered_df = dfcluster_merged.loc[dfcluster_merged.index == user_date]
 
                     if not filtered_df.empty:
                         # Retrieve the cluster value and energy load
@@ -90,6 +90,7 @@ def show_explore_page():
 
 
 
+
 def reorder_clusters(df_pivot_w_clusters):
     if df_pivot_w_clusters is not None:
         st.header('Reordering Clusters:')
@@ -102,7 +103,7 @@ def reorder_clusters(df_pivot_w_clusters):
         st.write(x)
 
         x_new = pd.DataFrame(x.reset_index()) # Creates a DataFrame from the sorted result
-        st.write(f" Dataframe of the sorted result:")
+        st.write(f"Dataframe of the sorted result:")
         st.write(x_new)
         x_new['ClusterValue'] = x_new.index # Creates a new column 'ClusterValue' and assigns new cluster numbers (0, 1, 2, ...) based on the sorted order.
         x_new = x_new.set_index('ClusterNo') # Sets 'ClusterNo' as the index.
@@ -118,7 +119,7 @@ def reorder_clusters(df_pivot_w_clusters):
         # right_index=True: Specifies that the index of the right DataFrame (x) should be used as the join key.
         dfcluster_merged = dfcluster_merged.drop(['ClusterNo'], axis=1) # drops the 'ClusterNo' column because it is now unnecessary since we reordered the clusters to 'ClusterNo2' order
         st.write(f"The dataframe below shows the original but pivoted dataframe containing unnormalized energy consumption data with the reordered and reassigned cluster numbers in the last column. Download it to view clusters.")
-        st.subheader(f"DataFrame with Clusters(download and head to the 'explore' page")
+        st.subheader(f"DataFrame with the requred Clusters")
         st.write(dfcluster_merged)
 
         #store in session state
@@ -127,6 +128,8 @@ def reorder_clusters(df_pivot_w_clusters):
 
         # Call the visualization function
         visualization(dfcluster_merged)
+
+        return(dfcluster_merged)
 
     else:
         st.error("The DataFrame is empty or not available.")

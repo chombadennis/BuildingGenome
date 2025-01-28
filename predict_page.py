@@ -2,7 +2,7 @@ import streamlit as st
 import pickle
 import numpy as np
 import datetime
-from explore_page import load_model, normalize_dataframe, reorder_clusters
+from explore_page import load_model, normalize_dataframe, reorder_clusters, show_explore_page
 import pandas as pd
 
 import sklearn
@@ -24,9 +24,8 @@ def show_predict_page():
 
     # Allow the user to upload a CSV file
     file = st.file_uploader("Choose a CSV file", type="csv", key='100k')
-
-    if st.button('Show clusters'):
-        if file is not None:
+    if file is not None:
+        try:
             # Read the uploaded file into a DataFrame
             df = pd.read_csv(file)
             st.write("Uploaded DataFrame:")
@@ -67,10 +66,21 @@ def show_predict_page():
                     st.write(df_pivot_w_clusters)
 
                     # Call the reorder_clusters function
-                    reorder_clusters(df_pivot_w_clusters)
-                    
-                else:
-                    st.error("The input data must have 24 hourly values to make a prediction.")
-            else:
-                st.error("The uploaded file must contain valid columns. Check readme file")
+                    dfcluster_merged = reorder_clusters(df_pivot_w_clusters)                 
+
+                    if isinstance(dfcluster_merged, pd.DataFrame):
+                        st.write("Download dataframe that has the required clusters here. You can identify cluster number and energy load of a specific time on a specific day by uploading this csv file in the 'explore'page")
+                    else:
+                        st.wsrite("dfcluster_merged NOT a DataFrame.")
+
+                    # Download button section starts here
+                    csv = dfcluster_merged.to_csv(index=True)  # Convert dataframe to CSV (with index)
+                    st.download_button(label="Download Clustered Data as CSV", data=csv, file_name="clustered_data.csv", mime="text/csv")
+                    # Download button section ends here
+        
+        except Exception as e:
+            st.error(f"An error occurred while processing the file: {e}")
+    else:
+        st.error("Please upload the CSV file to proceed.")
+
 
