@@ -36,7 +36,7 @@ def show_explore_page():
     # Allow the user to upload a CSV file
     file_cl = st.file_uploader("Choose a CSV file", type="csv", key='low')
     
-    st.subheader('Click below to get energy load and cluster value information')
+    # st.subheader('Click below to get energy load and cluster value information')
     if file_cl is not None:
         try:
             # Read the uploaded file into a DataFrame
@@ -53,7 +53,7 @@ def show_explore_page():
             dfcluster_merged['Date'] = pd.to_datetime(dfcluster_merged['Date']).dt.date  # Ensure date format (YYYY-MM-DD)
             dfcluster_merged.set_index('Date', inplace=True)  # Set 'Date' as the index
 
-            st.write(dfcluster_merged.head(50))  # Display a preview of the DataFrame
+            st.write(dfcluster_merged)  # Display a preview of the DataFrame
 
             # User inputs: date and time
             user_date = st.date_input("Enter a date in 2015 to check cluster and energy load:", min_value=pd.to_datetime('2010-01-01').date())
@@ -103,13 +103,13 @@ def reorder_clusters(df_pivot_w_clusters):
         st.write(x)
 
         x_new = pd.DataFrame(x.reset_index()) # Creates a DataFrame from the sorted result
-        st.write(f"Dataframe of the sorted result:")
+        st.write(f"Dataframe showing total energy cosumption per cluster sorted in ascending order:")
         st.write(x_new)
         x_new['ClusterValue'] = x_new.index # Creates a new column 'ClusterValue' and assigns new cluster numbers (0, 1, 2, ...) based on the sorted order.
         x_new = x_new.set_index('ClusterNo') # Sets 'ClusterNo' as the index.
         x_new = x_new.drop([0], axis=1) # Drops the unnecessary column with sum of averages of the clusters
-        st.write(f'A bit confusing right?')
-        st.write(f"Reassigning the cluster numbers with the order 0,1,2,3. =Such that that 0 is the lowest consuming cluster, followed by 1, 2, then 3 is the highest consuming cluster. Dataframe showing what value the original cluster was reassigned to:")
+        st.write(f'The way cluster values are assigned is confusing right?')
+        st.write(f"Cluster values have been reassigned in the order 0,1,2,3. Such that that 0 is the clsuetr with the lowest energy load, followed by 1, 2, then 3 as the highest consuming cluster. The dataframe below shows what value the original cluster number was reassigned to:")
         st.write(x_new)
         # Merge the new cluster numbers into the original DataFrame.
         dfcluster_merged = df_pivot_w_clusters.merge(x_new, how='outer', left_on='ClusterNo', right_index=True)
@@ -119,7 +119,7 @@ def reorder_clusters(df_pivot_w_clusters):
         # right_index=True: Specifies that the index of the right DataFrame (x) should be used as the join key.
         dfcluster_merged = dfcluster_merged.drop(['ClusterNo'], axis=1) # drops the 'ClusterNo' column because it is now unnecessary since we reordered the clusters to 'ClusterNo2' order
         st.write(f"The dataframe below shows the original but pivoted dataframe containing unnormalized energy consumption data with the reordered and reassigned cluster numbers in the last column. Download it to view clusters.")
-        st.subheader(f"DataFrame with the requred Clusters")
+        st.subheader(f"DataFrame with the required Clusters")
         st.write(dfcluster_merged)
 
         #store in session state

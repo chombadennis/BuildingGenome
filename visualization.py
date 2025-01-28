@@ -32,19 +32,19 @@ def DayvsClusterMaker(df):
 
 def visualization(dfcluster_merged):
     if dfcluster_merged is not None:
-        st.header("Visulaizations of Data to Reveal Patterns of Behaviour over a Time Period")
+        st.header("Visualizations of Data to Reveal Patterns of Behaviour over a Time Period")
         st.write(f"Setting Multilevel Indexing for Visualization. The dataframe below shows hierarchical division of the dtaframe- depending on the cluster values assigned by the K means algorithm:")
         dfcluster_merged_viz = dfcluster_merged.set_index(['ClusterValue', 'Date']).T.sort_index() # sets the dataframe with multilevel indexing, 'ClusterValue' as level 0
         st.write(f"Dataframe with multilevel indexing, 'ClusterValue' as level 0:")
         st.write(dfcluster_merged_viz)
 
-        st.header(f"### Visulaization:")
-        st.write(f"Extracted list of unique cluster numbers from the dfcluster_merged_viz DataFrame:")
+        st.header(f"Visualization:")
+        st.write(f"Extracted list of unique cluster numbers:")
         clusterlist = list(dfcluster_merged_viz.columns.get_level_values(0).unique())
         st.write(clusterlist)
 
         st.subheader(f'Plot of the daily energy consumption profiles grouped by clusters:')
-        st.write(f"To visualize the cluster patterns, we first look at all the profiles at once divided according to cluster. We  iterate over each cluster to plot the daily energy consumption profiles. The x-axis represents the time of day, and the y-axis represents the total daily profile:")
+        st.write(f"To visualize the cluster patterns, we first look at all the profiles at once grouped by cluster. We  iterate over each cluster to plot the daily energy consumption profiles. The x-axis represents the time of day, and the y-axis represents the total daily profile:")
         
         matplotlib.rcParams['figure.figsize'] = 20, 7
         styles2 = ['LightSkyBlue', 'b','LightGreen', 'g','LightCoral','r','SandyBrown','Orange','Plum','Purple','Gold','b']
@@ -58,7 +58,7 @@ def visualization(dfcluster_merged):
         st.pyplot(fig)
 
         # Unstacking the Dataframe
-        st.write(f"Having observed how the energy consumption has been clustered, there is no need for the hierarchy. We therefore remove the multilevel indexing from dataframe:")
+        st.write(f"Having observed how the energy consumption has been clustered, there is no need for the hierarchy. The multilevel indexing is hence removed from dataframe:")
         dfclusterunstacked = ClusterUnstacker(dfcluster_merged_viz)
         st.write(dfclusterunstacked)
         st.write(f'The following pivot table is created from the unstacked dataframe above:')
@@ -96,7 +96,7 @@ def visualization(dfcluster_merged):
         # Display the plot in the Streamlit app
         st.pyplot(fig4)
 
-        st.subheader(f"2nd Plot to show the Number of Days for Each Cluster")
+        st.subheader(f"5th Plot shows the how much capacity each cluster (of Energy load) occupies per day")
         st.write(f"The plot below puts more perspective to the plot #4 above.")
         fig5, ax5 = plt.subplots()
         DayVsClusterplot2 = DayVsCluster.T.plot(ax = ax5, figsize=(20,7),kind='bar',stacked=True, color=['b','g','r','c','m','y','k']) #, color=colors2

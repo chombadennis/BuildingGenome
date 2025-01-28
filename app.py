@@ -2,14 +2,14 @@ import streamlit as st
 from predict_page import show_predict_page
 from explore_page import show_explore_page
 
-st.title('MACHINE LEARNING PROJECT OF THE BUILDING GENOME PROJECT')
+st.title('MACHINE LEARNING - BUILDING GENOME PROJECT')
 
-st.header('SECTION A: Clustering of the Daily Energy Consumption load profiles for the Building Data Genome Project')
+st.header('Clustering of the Daily Energy Consumption load profiles')
 
 st.write(
     """
-    Here, we use the clustering algorithm to group buildings with similar energy consumption patterns and identify patterns
-    or anomalies. Through clustering, we aim to enhance energy management, detect anomalies, and improve demand forecasting.
+    Here, we use the clustering algorithm to energy consumption patterns and identify patterns
+    or anomalies. Through clustering, we aim to enhance energy management, detect anomalies and improve demand forecasting.
     """
 )
 
